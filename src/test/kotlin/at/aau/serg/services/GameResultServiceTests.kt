@@ -3,8 +3,7 @@ package at.aau.serg.services
 import at.aau.serg.models.GameResult
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import kotlin.test.*
 
 class GameResultServiceTests {
 
@@ -71,5 +70,61 @@ class GameResultServiceTests {
         assertEquals(gameResult2, res[1])
         assertEquals(2, res[1].id)
     }
+    @Test
+    fun `test deleteGameResult removes existing entry`() {
+        val gameResult = GameResult(0, "To Delete", 10, 10.0)
+        service.addGameResult(gameResult)
 
+        // Use the ID assigned by the service (1)
+        val deleted = service.deleteGameResult(1)
+
+
+        assertTrue(deleted)
+        assertEquals(0, service.getGameResults().size)
+    }
+
+    @Test
+    fun `test getSortedLeaderboard sorting criteria`() {
+        // Task 2.2.1: Higher score first, then lower time [cite: 40]
+        val p1 = GameResult(0, "A", 100, 50.0)
+        val p2 = GameResult(0, "B", 100, 30.0) // Same score, faster
+        val p3 = GameResult(0, "C", 50, 10.0)  // Lower score
+
+        service.addGameResult(p1)
+        service.addGameResult(p2)
+        service.addGameResult(p3)
+
+        val sorted = service.getSortedLeaderboard()
+
+        assertEquals("B", sorted[0].playerName) // Best: Rank 1
+        assertEquals("A", sorted[1].playerName) // Second: Rank 2
+        assertEquals("C", sorted[2].playerName) // Third: Rank 3
+    }
+
+    @Test
+    fun `test getLeaderboardWithRank valid rank and neighbors`() {
+        // Task 2.2.2: Rank + 3 above + 3 below [cite: 44, 46]
+        for (i in 1..10) {
+            service.addGameResult(GameResult(0, "P$i", i * 10, i.toDouble()))
+        }
+
+        // Total 10 players. Best is P10 (Score 100), Rank 5 is P6 (Score 60)
+        val slice = service.getLeaderboardWithRank(5)
+
+        // Neighbors for Rank 5: Ranks 2, 3, 4, [5], 6, 7, 8 (Total 7)
+        assertEquals(7, slice.size)
+    }
+
+    @Test
+    fun `test getLeaderboardWithRank invalid rank throws exception`() {
+        service.addGameResult(GameResult(0, "Top", 100, 10.0))
+
+        // Task 2.2.2: Invalid rank results in error [cite: 47]
+        org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
+            service.getLeaderboardWithRank(0)
+        }
+        org.junit.jupiter.api.assertThrows<IllegalArgumentException> {
+            service.getLeaderboardWithRank(5)
+        }
+    }
 }
