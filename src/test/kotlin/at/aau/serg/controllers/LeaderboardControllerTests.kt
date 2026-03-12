@@ -3,11 +3,13 @@ package at.aau.serg.controllers
 import at.aau.serg.models.GameResult
 import at.aau.serg.services.GameResultService
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
-import kotlin.test.Test
+import org.springframework.web.server.ResponseStatusException
 import kotlin.test.assertEquals
-import org.mockito.Mockito.`when` as whenever // when is a reserved keyword in Kotlin
+import org.mockito.Mockito.`when` as whenever
 
 class LeaderboardControllerTests {
 
@@ -16,42 +18,43 @@ class LeaderboardControllerTests {
 
     @BeforeEach
     fun setup() {
-        mockedService = mock<GameResultService>()
+        mockedService = mock(GameResultService::class.java)
         controller = LeaderboardController(mockedService)
     }
 
     @Test
-    fun test_getLeaderboard_correctScoreSorting() {
-        val first = GameResult(1, "first", 20, 20.0)
-        val second = GameResult(2, "second", 15, 10.0)
-        val third = GameResult(3, "third", 10, 15.0)
+    fun `getLeaderboard without rank calls sorted leaderboard`() {
+        val results = listOf(GameResult(1, "Player", 100, 10.0))
+        whenever(mockedService.getSortedLeaderboard()).thenReturn(results)
 
-        whenever(mockedService.getGameResults()).thenReturn(listOf(second, first, third))
+        val response = controller.getLeaderboard(null)
 
-        val res: List<GameResult> = controller.getLeaderboard()
-
-        verify(mockedService).getGameResults()
-        assertEquals(3, res.size)
-        assertEquals(first, res[0])
-        assertEquals(second, res[1])
-        assertEquals(third, res[2])
+        verify(mockedService).getSortedLeaderboard()
+        assertEquals(results, response)
     }
 
     @Test
-    fun test_getLeaderboard_sameScore_CorrectIdSorting() {
-        val first = GameResult(1, "first", 20, 20.0)
-        val second = GameResult(2, "second", 20, 10.0)
-        val third = GameResult(3, "third", 20, 15.0)
+    fun `getLeaderboard with valid rank calls rank filtering`() {
+        val rank = 5
+        val filteredResults = listOf(GameResult(1, "Player", 100, 10.0))
+        whenever(mockedService.getLeaderboardWithRank(rank)).thenReturn(filteredResults)
 
-        whenever(mockedService.getGameResults()).thenReturn(listOf(second, first, third))
+        val response = controller.getLeaderboard(rank)
 
-        val res: List<GameResult> = controller.getLeaderboard()
-
-        verify(mockedService).getGameResults()
-        assertEquals(3, res.size)
-        assertEquals(first, res[0])
-        assertEquals(second, res[1])
-        assertEquals(third, res[2])
+        verify(mockedService).getLeaderboardWithRank(rank)
+        assertEquals(filteredResults, response)
     }
 
+    @Test
+    fun `getLeaderboard with invalid rank throws 400 Bad Request`() {
+        val invalidRank = -1
+        // Simulate the service throwing an exception for invalid rank
+        whenever(mockedService.getLeaderboardWithRank(invalidRank))
+            .thenThrow(IllegalArgumentException("Rank out of bounds"))
+
+        // Task 2.2.2: Verify that the controller maps this to a ResponseStatusException (HTTP 400)
+        assertThrows<ResponseStatusException> {
+            controller.getLeaderboard(invalidRank)
+        }
+    }
 }
