@@ -19,14 +19,14 @@ class LeaderboardController(
     fun getLeaderboard(@RequestParam(required = false) rank: Int?): List<GameResult> {
         return try {
             if (rank == null) {
-                // Task 2.2.1: Return the full sorted leaderboard [cite: 40, 45]
+                // Return the full sorted leaderboard
                 gameResultService.getSortedLeaderboard()
             } else {
-                // Task 2.2.2: Return the player at rank plus 3 neighbors above and below [cite: 44, 46]
+                // Return the player at rank plus 3 neighbors above and below
                 gameResultService.getLeaderboardWithRank(rank)
             }
         } catch (e: IllegalArgumentException) {
-            // Task 2.2.2: Respond with HTTP 400 if rank is invalid
+            // Respond with HTTP 400 if rank is invalid
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, e.message)
         }
     }

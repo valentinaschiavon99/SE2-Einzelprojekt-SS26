@@ -22,7 +22,7 @@ class GameResultService {
     fun deleteGameResult(id: Long) = gameResults.removeIf { it.id == id }
 
     /**
-     * Task 2.2.1: Sorting logic
+     * Sorting logic
      * Returns the leaderboard sorted by:
      * 1. Score descending (higher is better) [cite: 40]
      * 2. Time ascending (faster is better) as a tiebreaker [cite: 40]
@@ -35,7 +35,7 @@ class GameResultService {
     }
 
     /**
-     * Task 2.2.2: Rank-based filtering
+     * Rank-based filtering
      * Returns a slice of the leaderboard: the player at the given rank 
      * plus 3 neighbors above and 3 neighbors below[cite: 46].
      */
