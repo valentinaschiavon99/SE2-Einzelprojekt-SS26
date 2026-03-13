@@ -52,7 +52,7 @@ class LeaderboardControllerTests {
         whenever(mockedService.getLeaderboardWithRank(invalidRank))
             .thenThrow(IllegalArgumentException("Rank out of bounds"))
 
-        // Task 2.2.2: Verify that the controller maps this to a ResponseStatusException (HTTP 400)
+        // Verify that the controller maps this to a ResponseStatusException (HTTP 400)
         assertThrows<ResponseStatusException> {
             controller.getLeaderboard(invalidRank)
         }
